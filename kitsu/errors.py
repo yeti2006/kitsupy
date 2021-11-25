@@ -1,0 +1,2 @@
+class KitsuError(Exception):
+    pass
