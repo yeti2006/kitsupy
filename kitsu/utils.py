@@ -14,8 +14,7 @@ def return_if_error(errors=(KeyError,), default_value=None):
     return decorator
 
 
-def decorate_class_with_decorator(decorater):
-    @wraps(decorater)
+def _decorate_class_with_decorator(decorater):
     def decorate(cls):
         for attr in cls.__dict__:
             if callable(getattr(cls, attr)):

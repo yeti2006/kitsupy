@@ -37,14 +37,34 @@ class KitsuClient:
                     f"Error code: {err['errors'][0]['code']}",
                 )
 
-    async def get_anime(self, query: str, limit: int = 10, offset: int = 0) -> Anime:
+    async def get_anime(
+        self,
+        query: typing.Union[int, str, Anime] = None,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> Anime:
+
+        params = {"page[limit]": str(limit), "page[offset]": str(offset)}
+
+        endpoint = "anime"
+
+        if isinstance(query, int):
+            endpoint = f"anime/{query}"
+        elif isinstance(query, str):
+            params["filter[text]"] = query
+        elif isinstance(query, Anime):
+            endpoint = f"anime/{Anime.id}"
+
+        else:
+            raise KitsuError(
+                "Invalid Type for argument query",
+                "Valid types: Anime, str, or int",
+                f"Got {type(query).__name__} instead.",
+            )
+
         response = await self._request(
-            endpoint="anime",
-            params={
-                "filter[text]": query,
-                "page[limit]": str(limit),
-                "page[offset]": str(offset),
-            },
+            endpoint=endpoint,
+            params=params,
         )
 
         return (

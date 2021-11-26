@@ -1,8 +1,8 @@
-from .utils import decorate_class_with_decorator, return_if_error
+from .utils import _decorate_class_with_decorator, return_if_error
 
 
-@decorate_class_with_decorator(property)
-@decorate_class_with_decorator(return_if_error())
+@_decorate_class_with_decorator(property)
+@_decorate_class_with_decorator(return_if_error())
 class Titles:
     def __init__(self, titles, canonical_title, abbreviated_titles):
         self._titles = titles
@@ -10,7 +10,7 @@ class Titles:
         self._abbreviated_titles = abbreviated_titles
 
     def en(self):
-        return self._titles["en__"]
+        return self._titles["en"]
 
     def en_ja(self):
         return self._titles["en_jp"]

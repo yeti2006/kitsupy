@@ -12,7 +12,7 @@ async def this():
         limit=1,
     )
 
-    print(anime.title.en)
+    print(anime.nsfw)
 
     await client.close()
 
