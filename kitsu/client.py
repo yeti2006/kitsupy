@@ -1,7 +1,9 @@
 import aiohttp, asyncio
 import typing
 from .anime import Anime
+from .episodes import AnimeEpisode
 from .errors import KitsuError
+from .utils import return_if_error
 
 
 class KitsuClient:
@@ -16,6 +18,24 @@ class KitsuClient:
     async def _create_session(self):
         return aiohttp.ClientSession()
 
+    async def next(self, _object, *args, **kwargs):
+        if isinstance(_object, Anime):
+            if _object._links:
+                response = await self._request(
+                    endpoint=_object._links["next"], *args, **kwargs
+                )
+
+                try:
+                    links = response["links"]
+                except (KeyError, ValueError):
+                    links = None
+
+                return (
+                    [Anime(x, self, links) for x in response["data"]]
+                    if not len(response["data"]) == 1
+                    else Anime(response["data"][0], self)
+                )
+
     async def _request(
         self, method: str = "get", endpoint: str = None, params: dict = None
     ):
@@ -23,28 +43,40 @@ class KitsuClient:
         headers["Accept"] = "application/vnd.api+json"
         headers["Content-Type"] = "application/vnd.api+json"
 
-        async with getattr(self._session, method)(
-            self._baseURL + endpoint, params=params, headers=headers
-        ) as response:
-            if response.status == 200:
-                return await response.json()
-            else:
-                err = await response.json()
-                raise KitsuError(
-                    f"Response code: {response.status}",
-                    f"Error title: {err['errors'][0]['title']}",
-                    f"Error message: {err['errors'][0]['detail']}",
-                    f"Error code: {err['errors'][0]['code']}",
-                )
+        if endpoint and "https://kitsu.io/api/edge/" in endpoint:
+            endpoint = endpoint.replace("https://kitsu.io/api/edge/", "")
+
+        response = await self._session._request(
+            method, self._baseURL + endpoint, params=params, headers=headers
+        )
+        if response.status == 200:
+
+            return await response.json()
+        elif response.status == 404:
+            raise KitsuError(404, "Route Not Found")
+        else:
+            err = await response.json()
+            raise KitsuError(
+                f"Response code: {response.status}",
+                f"Error title: {err['errors'][0]['title']}",
+                f"Error message: {err['errors'][0]['detail']}",
+                f"Error code: {err['errors'][0]['code']}",
+            )
 
     async def get_anime(
         self,
-        query: typing.Union[int, str, Anime] = None,
+        query: typing.Union[int, str, Anime],
         limit: int = 10,
         offset: int = 0,
+        custom_params: dict = None,
+        _endpoint=None,
     ) -> Anime:
 
-        params = {"page[limit]": str(limit), "page[offset]": str(offset)}
+        params = (
+            {"page[limit]": str(limit), "page[offset]": str(offset)}
+            if not custom_params
+            else custom_params
+        )
 
         endpoint = "anime"
 
@@ -66,12 +98,26 @@ class KitsuClient:
             endpoint=endpoint,
             params=params,
         )
+        try:
+            links = response["links"]
+        except (KeyError, ValueError):
+            links = None
 
         return (
-            [Anime(x) for x in response["data"]]
+            [Anime(x, self, links) for x in response["data"]]
             if not len(response["data"]) == 1
-            else Anime(response["data"][0])
+            else Anime(response["data"][0], self)
         )
+
+    async def get_episode(
+        self,
+        query: typing.Union[int, str, Anime],
+        limit: int = 10,
+        offset: int = 0,
+        custom_params: dict = None,
+    ) -> AnimeEpisode:
+
+        pass
 
     async def close(self):
         """Closes the aiohttp session"""

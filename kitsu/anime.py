@@ -8,8 +8,10 @@ from .utils import return_if_error
 
 
 class Anime:
-    def __init__(self, data: dict):
+    def __init__(self, data: dict, _cls, links=None):
+        self._cls = _cls
         self._data = data
+        self._links = links
 
     @property
     @return_if_error()
@@ -147,3 +149,32 @@ class Anime:
     @return_if_error()
     def nsfw(self) -> bool:
         return self._data["attributes"]["nsfw"]
+
+    @property
+    @return_if_error()
+    async def _original_genres(self) -> list:
+        _genres: dict = await self._cls._request(
+            endpoint=self._data["relationships"]["genres"]["links"]["related"]
+        )
+
+        return [
+            {
+                "id": data["id"],
+                "name": data["attributes"]["name"],
+                "description": data["attributes"]["description"],
+                "slug": data["attributes"]["slug"],
+            }
+            for data in _genres["data"]
+        ]
+
+    @property
+    @return_if_error()
+    async def genres(self) -> list:
+        return [x["name"] for x in (await self._original_genres)]
+
+    @return_if_error()
+    async def episodes(self, limit=1):
+        return await self._cls._request(
+            endpoint=self._data["relationships"]["episodes"]["links"]["related"],
+            params={"page[limit]": str(limit)},
+        )
