@@ -2,7 +2,7 @@ from .utils import return_if_error
 import typing
 
 
-class Images:
+class Images(object):
     def __init__(self, poster_image: dict, cover_image: dict):
         self._poster_image = poster_image
         self._cover_image = cover_image

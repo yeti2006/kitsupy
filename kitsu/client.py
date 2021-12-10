@@ -5,6 +5,8 @@ from .episodes import AnimeEpisode
 from .errors import KitsuError
 from .utils import return_if_error
 
+from pprint import pprint as p
+
 
 class KitsuClient:
     def __init__(self, session: typing.Optional[aiohttp.ClientSession] = None):
@@ -19,22 +21,25 @@ class KitsuClient:
         return aiohttp.ClientSession()
 
     async def next(self, _object, *args, **kwargs):
-        if isinstance(_object, Anime):
+            if isinstance(_object, list):
+                _object = _object[0]
+                
             if _object._links:
+
                 response = await self._request(
                     endpoint=_object._links["next"], *args, **kwargs
                 )
 
-                try:
-                    links = response["links"]
-                except (KeyError, ValueError):
-                    links = None
+                links = response.get("links", None)
+            
+            # Implement check for object type and return instance accordingly
+            if links:
+                return [Anime(x, self, links) for x in response["data"]]
 
-                return (
-                    [Anime(x, self, links) for x in response["data"]]
-                    if not len(response["data"]) == 1
-                    else Anime(response["data"][0], self)
-                )
+            return Anime(response, self)
+        
+    async def next_all(self, _object, *args, **kwargs):
+        ...
 
     async def _request(
         self, method: str = "get", endpoint: str = None, params: dict = None
@@ -50,8 +55,18 @@ class KitsuClient:
             method, self._baseURL + endpoint, params=params, headers=headers
         )
         if response.status == 200:
+            _data = await response.json()
 
-            return await response.json()
+            if isinstance(_data["data"], dict):  # Has only returned one result
+                return _data["data"]
+            elif isinstance(_data["data"], list):  # Multiple results
+                if (
+                    len(_data["data"]) == 1
+                ):  # but only one result given(this possibly would not be necessary)
+                    return _data["data"][0]
+                else:
+                    return _data
+
         elif response.status == 404:
             raise KitsuError(404, "Route Not Found")
         else:
@@ -65,11 +80,10 @@ class KitsuClient:
 
     async def get_anime(
         self,
-        query: typing.Union[int, str, Anime],
+        query: typing.Union[int, str],
         limit: int = 10,
         offset: int = 0,
         custom_params: dict = None,
-        _endpoint=None,
     ) -> Anime:
 
         params = (
@@ -84,13 +98,11 @@ class KitsuClient:
             endpoint = f"anime/{query}"
         elif isinstance(query, str):
             params["filter[text]"] = query
-        elif isinstance(query, Anime):
-            endpoint = f"anime/{Anime.id}"
 
         else:
             raise KitsuError(
                 "Invalid Type for argument query",
-                "Valid types: Anime, str, or int",
+                "Valid types: str, or int",
                 f"Got {type(query).__name__} instead.",
             )
 
@@ -98,26 +110,51 @@ class KitsuClient:
             endpoint=endpoint,
             params=params,
         )
-        try:
-            links = response["links"]
-        except (KeyError, ValueError):
-            links = None
 
-        return (
-            [Anime(x, self, links) for x in response["data"]]
-            if not len(response["data"]) == 1
-            else Anime(response["data"][0], self)
-        )
+        links = response.get("links", None)
+        if links:
+            return [Anime(x, self, links) for x in response["data"]]
+
+        return Anime(response, self)
 
     async def get_episode(
         self,
-        query: typing.Union[int, str, Anime],
+        query: typing.Union[int, str],
         limit: int = 10,
         offset: int = 0,
         custom_params: dict = None,
     ) -> AnimeEpisode:
 
-        pass
+        params = (
+            {"page[limit]": str(limit), "page[offset]": str(offset)}
+            if not custom_params
+            else custom_params
+        )
+
+        endpoint = "episodes"
+
+        if isinstance(query, int):
+            endpoint = f"episodes/{query}"
+        elif isinstance(query, str):
+            params["filter[text]"] = query
+
+        else:
+            raise KitsuError(
+                "Invalid Type for argument query",
+                "Valid types: str, or int",
+                f"Got {type(query).__name__} instead.",
+            )
+
+        response = await self._request(
+            endpoint=endpoint,
+            params=params,
+        )
+
+        links = response.get("links", None)
+        if links:
+            return [AnimeEpisode(x, self, links) for x in response["data"]]
+
+        return AnimeEpisode(response, self)
 
     async def close(self):
         """Closes the aiohttp session"""

@@ -7,7 +7,7 @@ import typing
 from .utils import return_if_error
 
 
-class Anime:
+class Anime(object):
     def __init__(self, data: dict, _cls, links=None):
         self._cls = _cls
         self._data = data

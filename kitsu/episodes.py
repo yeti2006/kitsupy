@@ -3,9 +3,11 @@ from datetime import datetime
 from .title import Titles
 
 
-class AnimeEpisode:
-    def __init__(self, data: dict):
+class AnimeEpisode(object):
+    def __init__(self, data: dict, cls, links=None):
         self._data = data
+        self._cls = cls
+        self._links = links
 
     @property
     @return_if_error()
@@ -40,8 +42,39 @@ class AnimeEpisode:
     @property
     @return_if_error()
     def title(self) -> Titles:
+        print(self._data)
         return Titles(
             self._data["attributes"]["titles"],
             self._data["attributes"]["canonicalTitle"],
             self._data["attributes"]["abbreviatedTitles"],
         )
+
+    @property
+    @return_if_error()
+    def season_number(self) -> int:
+        return self._data["attributes"]["seasonNumber"]
+
+    @property
+    @return_if_error()
+    def number(self) -> int:
+        return self._data["attributes"]["number"]
+
+    @property
+    @return_if_error()
+    def relative_number(self) -> int:
+        return self._data["attributes"]["relativeNumber"]
+
+    @property
+    @return_if_error()
+    def airdate(self) -> datetime:
+        return datetime.fromisoformat(self._data["attributes"]["airdate"])
+
+    @property
+    @return_if_error()
+    def length(self) -> int:
+        return self._data["attributes"]["length"]
+
+    @property
+    @return_if_error()
+    def thumbnail_url(self) -> str:
+        return self._data["attributes"]["thumbnail"]["original"]
