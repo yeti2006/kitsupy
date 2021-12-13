@@ -10,13 +10,15 @@ async def this():
 
     anime = await client.get_anime("kimi no na wa", 3, 3)
 
-    for _anime in anime:
-        print(_anime.title.en)
+    print([x.title for x in anime])
 
-    next_anime = await client.next(anime)
+    # for _anime in anime:
+    #     print(_anime.title.en)
 
-    for _anime in next_anime:
-        print(_anime.title.en)
+    # next_anime = await client.next(anime)
+
+    # for _anime in next_anime:
+    #     print(_anime.title.en)
 
     await client.close()
 

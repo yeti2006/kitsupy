@@ -1,6 +1,6 @@
 from .utils import return_if_error
 from datetime import datetime
-from .title import Titles
+from ._namedtuples import Titles
 
 
 class AnimeEpisode(object):

@@ -1,7 +1,11 @@
+from collections import namedtuple
+from os import O_SHORT_LIVED
 import aiohttp
 
+from kitsu.episodes import AnimeEpisode
+
 from .images import Images
-from .title import Titles
+from ._namedtuples import Titles
 from datetime import datetime
 import typing
 from .utils import return_if_error
@@ -47,9 +51,11 @@ class Anime(object):
     @return_if_error()
     def title(self) -> Titles:
         return Titles(
-            self._data["attributes"]["titles"],
-            self._data["attributes"]["canonicalTitle"],
-            self._data["attributes"]["abbreviatedTitles"],
+            self._data["attributes"]["titles"].get("en", None),
+            self._data["attributes"]["titles"].get("en_ja", None),
+            self._data["attributes"]["titles"].get("ja_jp", None),
+            self._data["attributes"].get("canonicalTitle", None),
+            self._data["attributes"].get("abbreviatedTitles", None),
         )
 
     @property
@@ -174,7 +180,22 @@ class Anime(object):
 
     @return_if_error()
     async def episodes(self, limit=1):
-        return await self._cls._request(
+        response = await self._cls._request(
             endpoint=self._data["relationships"]["episodes"]["links"]["related"],
             params={"page[limit]": str(limit)},
         )
+
+        links = response.get("links", None)
+        return (
+            [AnimeEpisode(x, self, links) for x in response["data"]]
+            if links
+            else AnimeEpisode(response, self)
+        )
+
+    @return_if_error()
+    async def streaming_links(self) -> list:
+        response = await self._cls._request(
+            endpoint=self._data["relationsships"]["streamingLinks"]["related"]
+        )
+
+        _streaming_links = namedtuple("Streaming_Links", ["id", "type", "_"])

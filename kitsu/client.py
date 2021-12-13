@@ -21,25 +21,38 @@ class KitsuClient:
         return aiohttp.ClientSession()
 
     async def next(self, _object, *args, **kwargs):
-            if isinstance(_object, list):
-                _object = _object[0]
-                
-            if _object._links:
+        if isinstance(_object, list):
+            _object = _object[0]
 
-                response = await self._request(
-                    endpoint=_object._links["next"], *args, **kwargs
-                )
+        if _object._links:
 
-                links = response.get("links", None)
-            
-            # Implement check for object type and return instance accordingly
-            if links:
-                return [Anime(x, self, links) for x in response["data"]]
+            response = await self._request(
+                endpoint=_object._links["next"], *args, **kwargs
+            )
 
-            return Anime(response, self)
-        
-    async def next_all(self, _object, *args, **kwargs):
-        ...
+            links = response.get("links", None)
+
+        # Implement check for object type and return instance accordingly
+        if isinstance(_object, Anime):
+            return (
+                [Anime(x, self, links) for x in response["data"]]
+                if links
+                else Anime(response, self)
+            )
+
+    # Even specifying offset returns 3000+ returns tf
+
+    # async def next_all(self, _object, *args, **kwargs):
+    #     objects = [_object]
+    #     if isinstance(_object, list):
+    #         _object = _object[0]
+
+    #     while _object._links and _object._links["next"]:
+    #         response = await self.next(_object)
+    #         objects.append(response)
+    #         return await self.next_all(response)
+
+    #     return objects
 
     async def _request(
         self, method: str = "get", endpoint: str = None, params: dict = None
@@ -112,10 +125,11 @@ class KitsuClient:
         )
 
         links = response.get("links", None)
-        if links:
-            return [Anime(x, self, links) for x in response["data"]]
-
-        return Anime(response, self)
+        return (
+            [Anime(x, self, links) for x in response["data"]]
+            if links
+            else Anime(response, self)
+        )
 
     async def get_episode(
         self,
@@ -151,10 +165,11 @@ class KitsuClient:
         )
 
         links = response.get("links", None)
-        if links:
-            return [AnimeEpisode(x, self, links) for x in response["data"]]
-
-        return AnimeEpisode(response, self)
+        return (
+            [AnimeEpisode(x, self, links) for x in response["data"]]
+            if links
+            else AnimeEpisode(response, self)
+        )
 
     async def close(self):
         """Closes the aiohttp session"""
