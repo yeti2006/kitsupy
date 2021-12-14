@@ -10,14 +10,8 @@
 
 ### **Installation**
 
-> Instructions (here_for_installation)
-
-```py
-#The command for installation isn't fixed yet
-```
-
 ---
 
 ### **Usage**
 
-> Instructions will be displayed as soon the wrapper is ready (here)
+# Coming Soon:tm:
