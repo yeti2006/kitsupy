@@ -1,14 +1,15 @@
 from collections import namedtuple
-from os import O_SHORT_LIVED
 import aiohttp
 
 from kitsu.episodes import AnimeEpisode
 
 from .images import Images
-from ._namedtuples import Titles
+from ._namedtuples import Titles, StreamingLinks
 from datetime import datetime
 import typing
 from .utils import return_if_error
+
+from pprint import pprint as p
 
 
 class Anime(object):
@@ -170,7 +171,7 @@ class Anime(object):
                 "description": data["attributes"]["description"],
                 "slug": data["attributes"]["slug"],
             }
-            for data in _genres["data"]
+            for data in _genres["data"] 
         ]
 
     @property
@@ -185,7 +186,7 @@ class Anime(object):
             params={"page[limit]": str(limit)},
         )
 
-        links = response.get("links", None)
+        links = response["links"].get("next", None)
         return (
             [AnimeEpisode(x, self, links) for x in response["data"]]
             if links
@@ -195,7 +196,56 @@ class Anime(object):
     @return_if_error()
     async def streaming_links(self) -> list:
         response = await self._cls._request(
-            endpoint=self._data["relationsships"]["streamingLinks"]["related"]
+            endpoint=self._data["relationships"]["streamingLinks"]["links"]["related"]
         )
 
-        _streaming_links = namedtuple("Streaming_Links", ["id", "type", "_"])
+        links = response["links"].get("first", None)
+
+        return [StreamingLinks(x) for x in response["data"]] if links else StreamingLinks(response)
+
+                
+
+
+class StreamingLinks(object):
+    def __init__(self, _data: dict, links=None):
+        self._data = _data
+        self._links = links
+        
+    @property
+    @return_if_error()
+    def id(self) -> int:
+        return self._data["id"]
+    
+    @property
+    @return_if_error()
+    def created_at(self) -> datetime:
+        return datetime.fromisoformat(self._data["attributes"]["createdAt"].strip("Z"))
+    
+    @property
+    @return_if_error()
+    def updated_at(self) -> datetime:
+        return datetime.fromisoformat(self._data["attributes"]["updatedAt"].strip("Z"))
+    
+    @property
+    @return_if_error()
+    def url(self) -> str:
+        return self._data["attributes"]["url"]
+    
+
+    @property
+    @return_if_error()
+    def subs(self) -> list:
+        return self._data["attributes"]["subs"]
+    
+    @property
+    @return_if_error()
+    def dubs(self) -> list:
+        return self._data["attributes"]["dubs"]
+
+    
+    
+    
+    
+    
+    
+    

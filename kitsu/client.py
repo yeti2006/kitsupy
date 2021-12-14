@@ -24,7 +24,7 @@ class KitsuClient:
         if isinstance(_object, list):
             _object = _object[0]
 
-        if _object._links:
+        if _object._links or _object.links:
 
             response = await self._request(
                 endpoint=_object._links["next"], *args, **kwargs
@@ -40,20 +40,7 @@ class KitsuClient:
                 else Anime(response, self)
             )
 
-    # Even specifying offset returns 3000+ returns tf
-
-    # async def next_all(self, _object, *args, **kwargs):
-    #     objects = [_object]
-    #     if isinstance(_object, list):
-    #         _object = _object[0]
-
-    #     while _object._links and _object._links["next"]:
-    #         response = await self.next(_object)
-    #         objects.append(response)
-    #         return await self.next_all(response)
-
-    #     return objects
-
+    
     async def _request(
         self, method: str = "get", endpoint: str = None, params: dict = None
     ):
@@ -69,6 +56,7 @@ class KitsuClient:
         )
         if response.status == 200:
             _data = await response.json()
+ 
 
             if isinstance(_data["data"], dict):  # Has only returned one result
                 return _data["data"]
@@ -124,7 +112,7 @@ class KitsuClient:
             params=params,
         )
 
-        links = response.get("links", None)
+        links = response["links"].get("first", None)
         return (
             [Anime(x, self, links) for x in response["data"]]
             if links
@@ -164,7 +152,7 @@ class KitsuClient:
             params=params,
         )
 
-        links = response.get("links", None)
+        links = response["links"].get("first", None)
         return (
             [AnimeEpisode(x, self, links) for x in response["data"]]
             if links

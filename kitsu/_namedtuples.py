@@ -5,5 +5,5 @@ Titles = namedtuple(
 )
 
 StreamingLinks = namedtuple(
-    "Streaming_Links", ["id", "created_at", "updated_at", "url", "subs", "dubs"]
+    "Streaming_Links", ["id", "created_at", "updated_at", "url", "subs", "dubs", "links"]
 )
