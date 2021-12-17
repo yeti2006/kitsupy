@@ -1,7 +1,13 @@
 from functools import wraps
 
 
-def return_if_error(errors=(KeyError,), default_value=None):
+def return_if_error(
+    errors=(
+        KeyError,
+        TypeError,
+    ),
+    default_value=None,
+):
     def decorator(func):
         def new_func(*args, **kwargs):
             try:

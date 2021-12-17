@@ -8,14 +8,10 @@ client = KitsuClient()
 
 async def this():
 
-    anime = await client.get_anime("Cowboy bepop", 1)
+    anime = await client.get_anime("Kimi no na wa", 1)
 
-
-    streaming_links = await anime.streaming_links()
-    
-    for streaming_link_object in streaming_links:
-        print(streaming_link_object.url)
-        
+    characters = await anime.characters()
+    print([c.images.original for c in characters])
 
     await client.close()
 

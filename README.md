@@ -6,12 +6,29 @@
 
 ---
 
-## Documentation
+This project is a fully featured(not at the time being) asynchronous
+API Wrapper providing full functionality over the https://kitsu.io/ JSON API.
 
-### **Installation**
+# Installation
+```
+Coming soon...
+```
 
----
+# Usage
+```py
+import kitsu, asyncio
 
-### **Usage**
+client = kitsu.KitsuClient()
 
-# Coming Soon:tm:
+async def main():
+    anime = client.get_anime("Kimi no na wa", limit=1)
+
+    if anime.nsfw is False:
+        print(f"{anime.title.ja_jp} is not NSFW!")
+
+        print(f"YouTube Trailer: {anime.youtube_url}")
+
+        print(f"Cover Art: {anime.images.cover_image_url(size="large")}")
+
+    else:
+        print(f"Oops!, this anime is {anime.age_rating} rated!")
