@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime
-from pprint import pprint as p
 
 from ._namedtuples import Titles, simple_image
 from .utils import return_if_error
@@ -13,7 +12,7 @@ class Character(object):
         self._links = links
 
     @classmethod
-    async def _init(self, data, cls, links=None):
+    async def _init(_cls, data, cls, links=None):
         _instance = Character(data, cls, links)
         _instance._character = await _instance._fetch_character()
         return _instance
@@ -60,7 +59,7 @@ class Character(object):
             endpoint=self._data["relationships"]["anime"]["links"]["related"]
         )
 
-        links = response["links"].get("next", None)
+        links = response["links"].get("next") if response.get("links") else None
 
         from .anime import Anime  # curricular import
 

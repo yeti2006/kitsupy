@@ -53,11 +53,11 @@ class Anime(object):
     @return_if_error()
     def title(self) -> Titles:
         return Titles(
-            self._data["attributes"]["titles"].get("en", None),
-            self._data["attributes"]["titles"].get("en_ja", None),
-            self._data["attributes"]["titles"].get("ja_jp", None),
-            self._data["attributes"].get("canonicalTitle", None),
-            self._data["attributes"].get("abbreviatedTitles", None),
+            self._data["attributes"]["titles"].get("en"),
+            self._data["attributes"]["titles"].get("en_ja"),
+            self._data["attributes"]["titles"].get("ja_jp"),
+            self._data["attributes"].get("canonicalTitle"),
+            self._data["attributes"].get("abbreviatedTitles"),
         )
 
     @property
@@ -187,7 +187,7 @@ class Anime(object):
             params={"page[limit]": str(limit)},
         )
 
-        links = response["links"].get("next", None)
+        links = response["links"].get("next") if response.get("links") else None
         return (
             [AnimeEpisode(x, self, links) for x in response["data"]]
             if links
@@ -205,7 +205,7 @@ class Anime(object):
             endpoint=self._data["relationships"]["streamingLinks"]["links"]["related"]
         )
 
-        links = response["links"].get("first", None)
+        links = response["links"].get("next") if response.get("links") else None
 
         return (
             [StreamingLinks(x) for x in response["data"]]
@@ -219,7 +219,20 @@ class Anime(object):
             endpoint=self._data["relationships"]["characters"]["links"]["related"]
         )
 
-        links = response["links"].get("next", None)
+        links = response["links"].get("next") if response.get("links") else None
+        return (
+            [await Character._init(x, self._cls, links) for x in response["data"]]
+            if links
+            else await Character._init(response, self._cls)
+        )
+
+    @return_if_error()
+    async def anime_characters(self) -> Character:
+        response = await self._cls._request(
+            endpoint=self._data["relationships"]["animeCharacters"]["links"]["related"]
+        )
+
+        links = response["links"].get("next") if response.get("links") else None
         return (
             [await Character._init(x, self._cls, links) for x in response["data"]]
             if links

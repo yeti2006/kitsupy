@@ -4,12 +4,14 @@ from .anime import Anime
 from .episodes import AnimeEpisode
 from .errors import KitsuError
 from .utils import return_if_error
+from .character import Character
 
 from pprint import pprint as p
 
 
 class KitsuClient:
     def __init__(self, session: typing.Optional[aiohttp.ClientSession] = None):
+
         self._baseURL = "https://kitsu.io/api/edge/"
         self._session = session
         if not session:
@@ -40,7 +42,6 @@ class KitsuClient:
                 else Anime(response, self)
             )
 
-    
     async def _request(
         self, method: str = "get", endpoint: str = None, params: dict = None
     ):
@@ -56,7 +57,6 @@ class KitsuClient:
         )
         if response.status == 200:
             _data = await response.json()
- 
 
             if isinstance(_data["data"], dict):  # Has only returned one result
                 return _data["data"]
@@ -112,7 +112,39 @@ class KitsuClient:
             params=params,
         )
 
-        links = response["links"].get("first", None)
+        links = response["links"].get("next", None) if response.get("links") else None
+        return (
+            [Anime(x, self, links) for x in response["data"]]
+            if links
+            else Anime(response, self)
+        )
+
+    async def trending_anime(
+        self,
+        limit: int = 10,
+        offset: int = 0,
+        custom_params: dict = None,
+    ) -> Anime:
+
+        params = (
+            {"page[limit]": str(limit), "page[offset]": str(offset)}
+            if not custom_params
+            else custom_params
+        )
+
+        endpoint = "trending/anime"
+
+        response = await self._request(
+            endpoint=endpoint,
+            params=params,
+        )
+
+        links = (
+            response["links"].get("next", None)
+            if response.get("links")
+            else None or len(response["data"]) != 1
+        )
+
         return (
             [Anime(x, self, links) for x in response["data"]]
             if links
@@ -152,11 +184,52 @@ class KitsuClient:
             params=params,
         )
 
-        links = response["links"].get("first", None)
+        links = response["links"].get("next") if response.get("links") else None
         return (
             [AnimeEpisode(x, self, links) for x in response["data"]]
             if links
             else AnimeEpisode(response, self)
+        )
+
+    async def get_character(
+        self,
+        query: typing.Union[int, str],
+        anime: bool = False,
+        limit: int = 10,
+        offset: int = 0,
+        custom_params: dict = None,
+    ) -> Character:
+
+        params = (
+            {"page[limit]": str(limit), "page[offset]": str(offset)}
+            if not custom_params
+            else custom_params
+        )
+
+        endpoint = "media-characters" if anime else "anime-characters"
+
+        if isinstance(query, int):
+            endpoint = (
+                f"media-characters/{query}" if anime else f"anime-characters/{query}"
+            )
+
+        else:
+            raise KitsuError(
+                "Invalid Type for argument query",
+                "Valid types:int",
+                f"Got {type(query).__name__} instead.",
+            )
+
+        response = await self._request(
+            endpoint=endpoint,
+            params=params,
+        )
+
+        links = response["links"].get("next", None) if response.get("links") else None
+        return (
+            [await Character._init(x, self, links) for x in response["data"]]
+            if links
+            else await Character._init(response, self)
         )
 
     async def close(self):

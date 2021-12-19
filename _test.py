@@ -1,5 +1,4 @@
 import asyncio
-from re import X
 from kitsu.client import KitsuClient
 from pprint import pprint as p
 
@@ -7,12 +6,16 @@ client = KitsuClient()
 
 
 async def this():
+    """
+    :param name: session - An aiohttp client session
+    :param type: str
+    :return: None
 
-    anime = await client.get_anime("Kimi no na wa", 1)
+    """
 
-    characters = await anime.characters()
-    print([c.images.original for c in characters])
-
+    animes = await client.get_anime("Kimi no na wa", limit=1)
+    characters = await animes.anime_characters()
+    print(characters)
     await client.close()
 
 
