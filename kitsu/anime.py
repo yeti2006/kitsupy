@@ -187,7 +187,7 @@ class Anime(object):
             params={"page[limit]": str(limit)},
         )
 
-        links = response["links"].get("next") if response.get("links") else None
+        links = response["links"].get("first") if response.get("links") else None
         return (
             [AnimeEpisode(x, self, links) for x in response["data"]]
             if links
@@ -205,7 +205,7 @@ class Anime(object):
             endpoint=self._data["relationships"]["streamingLinks"]["links"]["related"]
         )
 
-        links = response["links"].get("next") if response.get("links") else None
+        links = response["links"].get("first") if response.get("links") else None
 
         return (
             [StreamingLinks(x) for x in response["data"]]
@@ -219,7 +219,7 @@ class Anime(object):
             endpoint=self._data["relationships"]["characters"]["links"]["related"]
         )
 
-        links = response["links"].get("next") if response.get("links") else None
+        links = response["links"].get("first") if response.get("links") else None
         return (
             [await Character._init(x, self._cls, links) for x in response["data"]]
             if links
@@ -232,7 +232,8 @@ class Anime(object):
             endpoint=self._data["relationships"]["animeCharacters"]["links"]["related"]
         )
 
-        links = response["links"].get("next") if response.get("links") else None
+        links = response["links"].get("first") if response.get("links") else None
+
         return (
             [await Character._init(x, self._cls, links) for x in response["data"]]
             if links

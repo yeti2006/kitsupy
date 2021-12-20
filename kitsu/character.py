@@ -4,6 +4,8 @@ from datetime import datetime
 from ._namedtuples import Titles, simple_image
 from .utils import return_if_error
 
+from pprint import pprint as p
+
 
 class Character(object):
     def __init__(self, _data: dict, cls, links=None):
@@ -59,7 +61,7 @@ class Character(object):
             endpoint=self._data["relationships"]["anime"]["links"]["related"]
         )
 
-        links = response["links"].get("next") if response.get("links") else None
+        links = response["links"].get("first") if response.get("links") else None
 
         from .anime import Anime  # curricular import
 

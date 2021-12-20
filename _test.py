@@ -1,5 +1,5 @@
 import asyncio
-from kitsu.client import KitsuClient
+from kitsu import KitsuClient
 from pprint import pprint as p
 
 client = KitsuClient()
@@ -15,7 +15,9 @@ async def this():
 
     animes = await client.get_anime("Kimi no na wa", limit=1)
     characters = await animes.anime_characters()
-    print(characters)
+    for c in characters:
+        print(c.name)
+
     await client.close()
 
 

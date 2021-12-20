@@ -81,6 +81,7 @@ class KitsuClient:
 
     async def get_anime(
         self,
+        *,
         query: typing.Union[int, str],
         limit: int = 10,
         offset: int = 0,
@@ -112,7 +113,7 @@ class KitsuClient:
             params=params,
         )
 
-        links = response["links"].get("next", None) if response.get("links") else None
+        links = response["links"].get("first", None) if response.get("links") else None
         return (
             [Anime(x, self, links) for x in response["data"]]
             if links
@@ -121,6 +122,7 @@ class KitsuClient:
 
     async def trending_anime(
         self,
+        *,
         limit: int = 10,
         offset: int = 0,
         custom_params: dict = None,
@@ -140,7 +142,7 @@ class KitsuClient:
         )
 
         links = (
-            response["links"].get("next", None)
+            response["links"].get("first", None)
             if response.get("links")
             else None or len(response["data"]) != 1
         )
@@ -153,6 +155,7 @@ class KitsuClient:
 
     async def get_episode(
         self,
+        *,
         query: typing.Union[int, str],
         limit: int = 10,
         offset: int = 0,
@@ -184,7 +187,7 @@ class KitsuClient:
             params=params,
         )
 
-        links = response["links"].get("next") if response.get("links") else None
+        links = response["links"].get("first") if response.get("links") else None
         return (
             [AnimeEpisode(x, self, links) for x in response["data"]]
             if links
@@ -193,6 +196,7 @@ class KitsuClient:
 
     async def get_character(
         self,
+        *,
         query: typing.Union[int, str],
         anime: bool = False,
         limit: int = 10,
@@ -225,7 +229,7 @@ class KitsuClient:
             params=params,
         )
 
-        links = response["links"].get("next", None) if response.get("links") else None
+        links = response["links"].get("first", None) if response.get("links") else None
         return (
             [await Character._init(x, self, links) for x in response["data"]]
             if links
