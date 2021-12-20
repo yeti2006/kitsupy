@@ -2,33 +2,66 @@
 
 > A work-in-progress asynchronous API wrapper around https://kitsu.io
 
-⚠ This project is still under development.
-
 ---
 
-This project is a fully featured(not at the time being) asynchronous
-API Wrapper providing full functionality over the https://kitsu.io/ JSON API.
+Asynchronous wrapper around the JSON API of [kitsu](https://kitsu.io). This project is still under development and incomplete, but usable.
 
-# Installation
-```
-Coming soon...
-```
+## Installation
 
-# Usage
+Install from github:
 ```py
-import kitsu, asyncio
+pip install git+https://github.com/yeti2006/kitsupy 
+```
 
-client = kitsu.KitsuClient()
+## Usage
+
+```py
+import asyncio, kitsu
+
+client = kitsu.KitsuClient() # Instantiate client;
+                            # you can optionally pass your own aiohttp client session
 
 async def main():
-    anime = client.get_anime("Kimi no na wa", limit=1)
+    anime = await client.get_anime(query="Kimi no na wa", limit=1)
 
-    if anime.nsfw is False:
-        print(f"{anime.title.ja_jp} is not NSFW!")
+    # Returns an kitsu.Anime object which happens to be the first
+    # result provided by the API as limit=1
 
-        print(f"YouTube Trailer: {anime.youtube_url}")
+    print(anime.id) # the API based ID of the anime
+    print(anime.title.en) # str, the english title of the anime
+    print(anime.created_at) # a datetime.datetime object of the creation date of the anime
+    print(anime.nsfw) # bool
 
-        print(f"Cover Art: {anime.images.cover_image_url(size="large")}")
+    anime_characters = await anime.characters()
 
-    else:
-        print(f"Oops!, this anime is {anime.age_rating} rated!")
+    # Returns a list of kitsu.Character objects
+
+    for character in anime_characters:
+        print(character.name)
+        print(character.description)
+
+    # Get the 10 most trending animes from the API
+    trending_anime = await client.trending_anime(limit=10)
+
+    for anime in trending_anime:
+        streaming_links = await anime.streaming_links()
+
+        for streaming_link in streaming_links:
+            print(streaming_link.url) # Prints a streaming link to the anime
+
+    # Search for a manga in API
+    manga = await client.get_manga(query="One Piece", limit=1)
+
+    print(manga.user_count) 
+
+    await client.close() # Close our client session
+```
+
+## Documentation
+
+The documentation can be found at:
+
+https://yeti-is-god.ml/kitsupy
+
+(Coming soon:tm:)
+

@@ -1,5 +1,7 @@
 import aiohttp, asyncio
 import typing
+
+from .manga import Manga
 from .anime import Anime
 from .episodes import AnimeEpisode
 from .errors import KitsuError
@@ -199,6 +201,7 @@ class KitsuClient:
         *,
         query: typing.Union[int, str],
         anime: bool = False,
+        manga: bool = False,
         limit: int = 10,
         offset: int = 0,
         custom_params: dict = None,
@@ -210,13 +213,15 @@ class KitsuClient:
             else custom_params
         )
 
-        endpoint = "media-characters" if anime else "anime-characters"
+        if not anime and not manga:
+            endpoint = "media-characters"
+        elif anime and not manga:
+            endpoint = "anime-characters"
+        elif manga and not anime:
+            endpoint = "manga-characters"
 
         if isinstance(query, int):
-            endpoint = (
-                f"media-characters/{query}" if anime else f"anime-characters/{query}"
-            )
-
+            endpoint = f"{endpoint}/{query}"
         else:
             raise KitsuError(
                 "Invalid Type for argument query",
@@ -234,6 +239,47 @@ class KitsuClient:
             [await Character._init(x, self, links) for x in response["data"]]
             if links
             else await Character._init(response, self)
+        )
+
+    async def get_manga(
+        self,
+        *,
+        query: typing.Union[int, str],
+        limit: int = 10,
+        offset: int = 0,
+        custom_params: dict = None,
+    ) -> Manga:
+
+        params = (
+            {"page[limit]": str(limit), "page[offset]": str(offset)}
+            if not custom_params
+            else custom_params
+        )
+
+        endpoint = "manga"
+
+        if isinstance(query, int):
+            endpoint = f"manga/{query}"
+        elif isinstance(query, str):
+            params["filter[text]"] = query
+
+        else:
+            raise KitsuError(
+                "Invalid Type for argument query",
+                "Valid types: str, or int",
+                f"Got {type(query).__name__} instead.",
+            )
+
+        response = await self._request(
+            endpoint=endpoint,
+            params=params,
+        )
+
+        links = response["links"].get("first", None) if response.get("links") else None
+        return (
+            [Manga(x, self, links) for x in response["data"]]
+            if links
+            else Manga(response, self)
         )
 
     async def close(self):

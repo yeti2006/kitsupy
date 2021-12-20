@@ -6,17 +6,9 @@ client = KitsuClient()
 
 
 async def this():
-    """
-    :param name: session - An aiohttp client session
-    :param type: str
-    :return: None
 
-    """
-
-    animes = await client.get_anime("Kimi no na wa", limit=1)
-    characters = await animes.anime_characters()
-    for c in characters:
-        print(c.name)
+    m = await client.get_manga(query="One piece", limit=1)
+    print(m.id)
 
     await client.close()
 
