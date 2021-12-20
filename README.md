@@ -55,6 +55,9 @@ async def main():
     print(manga.user_count) 
 
     await client.close() # Close our client session
+
+
+asyncio.get_event_loop().run_until_complete(main())
 ```
 
 ## Documentation
