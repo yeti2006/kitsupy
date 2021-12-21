@@ -30,19 +30,32 @@ class KitsuClient:
 
         if _object._links or _object.links:
 
-            response = await self._request(
-                endpoint=_object._links["next"], *args, **kwargs
+            try:
+                response = await self._request(
+                    endpoint=_object._links["next"], *args, **kwargs
+                )
+            except (KeyError, ValueError):
+                return None
+
+            links = (
+                response["links"].get("first", None) if response.get("links") else None
             )
 
-            links = response.get("links", None)
-
-        # Implement check for object type and return instance accordingly
-        if isinstance(_object, Anime):
-            return (
-                [Anime(x, self, links) for x in response["data"]]
-                if links
-                else Anime(response, self)
-            )
+        _datatypes = [Anime, Manga, AnimeEpisode]
+        for obj in _datatypes:
+            if isinstance(_object, obj):
+                return (
+                    [obj(x, self, links) for x in response["data"]]
+                    if links
+                    else obj(response, self)
+                )
+            elif isinstance(_object, Character):
+                return (
+                    [await Character._init(x, self, links) for x in response["data"]]
+                    if links
+                    else await Character._init(response, self)
+                )
+            raise KitsuError("Invalid type provided")
 
     async def _request(
         self, method: str = "get", endpoint: str = None, params: dict = None
@@ -143,11 +156,7 @@ class KitsuClient:
             params=params,
         )
 
-        links = (
-            response["links"].get("first", None)
-            if response.get("links")
-            else None or len(response["data"]) != 1
-        )
+        links = response["links"].get("first", None) if response.get("links") else None
 
         return (
             [Anime(x, self, links) for x in response["data"]]

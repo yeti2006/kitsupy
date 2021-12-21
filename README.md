@@ -66,5 +66,5 @@ The documentation can be found at:
 
 https://yeti-is-god.ml/kitsupy
 
-(Coming soon:tm:)
+:warning: Incomplete.
 

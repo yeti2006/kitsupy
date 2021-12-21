@@ -1,6 +1,3 @@
-from functools import wraps
-
-
 def return_if_error(
     errors=(
         KeyError,
@@ -20,13 +17,13 @@ def return_if_error(
     return decorator
 
 
-def _decorate_class_with_decorator(decorater):
-    def decorate(cls):
-        for attr in cls.__dict__:
-            if callable(getattr(cls, attr)):
-                if not attr.startswith("_"):
-                    setattr(cls, attr, decorater(getattr(cls, attr)))
+# def _decorate_class_with_decorator(decorater):
+#     def decorate(cls):
+#         for attr in cls.__dict__:
+#             if callable(getattr(cls, attr)):
+#                 if not attr.startswith("_"):
+#                     setattr(cls, attr, decorater(getattr(cls, attr)))
 
-        return cls
+#         return cls
 
-    return decorate
+#     return decorate
